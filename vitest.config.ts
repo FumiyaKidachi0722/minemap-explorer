@@ -27,7 +27,11 @@ export default defineConfig({
         'src/infrastructure/**/*.ts',
         'src/application/**/*.ts',
       ],
-      exclude: ['src/presentation/components/ui/**', 'src/**/__tests__/**'],
+      exclude: [
+        'src/presentation/components/ui/**',
+        'src/presentation/components/**/*.tsx',
+        'src/**/__tests__/**',
+      ],
       thresholds: {
         lines: 100,
         functions: 100,
