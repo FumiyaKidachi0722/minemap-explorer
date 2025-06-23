@@ -7,9 +7,14 @@ export default function Home() {
       <p className="text-center">
         Next.js 15 と React 19 で構築された簡易マインクラフトビューアです。
       </p>
-      <Link href="/viewer" className="text-blue-600 underline">
-        ビューアを開く
-      </Link>
+      <div className="flex gap-4">
+        <Link href="/viewer-sample" className="text-blue-600 underline">
+          サンプルビューア
+        </Link>
+        <Link href="/world" className="text-blue-600 underline">
+          ワールドビューア
+        </Link>
+      </div>
     </main>
   );
 }
