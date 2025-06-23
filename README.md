@@ -144,9 +144,11 @@ Next.js 15のApp Router環境とReact 19世代に合わせ、本アプリの実�
 
 ## 実際にマイクラワールドを表示するには
 
-1. **Minecraft サーバーに BlueMap プラグインを導入**します。ワールドデータを読み込み、`bluemap` ディレクトリに 3D タイルデータを出力します。
-2. 生成された `bluemap/web` ディレクトリをこのプロジェクトの `public/bluemap` に配置します。
-3. `/world` ページから BlueMap データを読み込んで表示するコンポーネントを実装します。React Three Fiber などの 3D ライブラリで PRBM ファイルを解析し、`BufferGeometry` に変換すると描画できます。
-4. サーバー側で定期的に BlueMap の再レンダリングを行い、`public/bluemap` を再デプロイすると、ブラウザ側でも最新のワールドを確認できます。
+実際のワールドを読み込むには、まずサーバー管理者としてワールドフォルダにアクセスできる必要があります。以下は BlueMap を利用する例です。
 
-以上は一例で、PrismarineJS を使い `.mca` ファイルから直接読み取る方法なども検討できます。
+1. **Minecraft サーバーに BlueMap プラグインを導入**し、ワールドの読み取り権限があることを確認します。サーバー起動後、`bluemap` ディレクトリに 3D タイルデータが生成されます。
+2. 生成された `bluemap/web` フォルダをこのプロジェクトの `public/bluemap` にコピーします。権限が不足している場合はサーバー管理者に取得を依頼してください。
+3. `/world` ページでは `public/bluemap` 配下の PRBM チャンクを読み込みます。React Three Fiber 等で PRBM を `BufferGeometry` に変換すればレンダリングできます。
+4. ワールドを更新するには、サーバー側で BlueMap の再レンダリングを実行し、生成物を再度 `public/bluemap` に配置した上でアプリをデプロイし直します。
+
+その他、PrismarineJS を用いて `.mca` ファイルを直接解析する方法もありますが、BlueMap を通す方が手軽です。
