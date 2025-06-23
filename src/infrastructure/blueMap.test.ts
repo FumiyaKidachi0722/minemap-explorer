@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { loadBlueMapChunk } from './blueMap';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 declare const atob: (s: string) => string;
 
 function buildChunk(): {base64: string, buffer: ArrayBuffer} {
@@ -19,7 +21,7 @@ function buildChunk(): {base64: string, buffer: ArrayBuffer} {
   return { base64, buffer: buf };
 }
 
-const { base64, buffer } = buildChunk();
+const { base64 } = buildChunk();
 
 beforeEach(() => {
   vi.restoreAllMocks();
@@ -42,7 +44,7 @@ describe('loadBlueMapChunk', () => {
     const gzBytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
     class DS {
       readable: ReadableStream<Uint8Array>;
-      constructor(_type: string){
+      constructor(){
         this.readable = new ReadableStream({
           start(ctrl){
             ctrl.enqueue(gzBytes);
