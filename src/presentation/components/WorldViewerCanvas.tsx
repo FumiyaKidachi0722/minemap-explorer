@@ -342,22 +342,46 @@ export default function WorldViewerCanvas() {
       requestAnimationFrame(drawScene);
     }
 
-    type Block = {
-      x: number;
-      y: number;
-      z: number;
-      color: [number, number, number, number];
-    };
+    async function loadBlocks() {
+      const res = await fetch('/bluemap/chunk0.prbm.gz.b64');
+      const b64 = await res.text();
+      const gzBytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      let buf: ArrayBuffer;
+      if ('DecompressionStream' in window) {
+        const ds = new DecompressionStream('gzip');
+        const stream = new Blob([gzBytes]).stream().pipeThrough(ds);
+        buf = await new Response(stream).arrayBuffer();
+      } else {
+        buf = gzBytes.buffer;
+      }
 
-    fetch('/world.json')
-      .then((res) => res.json())
-      .then((data: { blocks: Block[] }) => {
-        blocks = data.blocks.map((b) => ({
-          pos: [b.x, b.y, b.z],
-          color: b.color,
-        }));
-        requestAnimationFrame(drawScene);
-      });
+      const data = new DataView(buf);
+      const magic = new TextDecoder().decode(new Uint8Array(buf.slice(0, 4)));
+      if (magic !== 'BLKB') throw new Error('invalid');
+      const count = data.getUint32(4, true);
+      let offset = 8;
+      blocks = [];
+      for (let i = 0; i < count; i++) {
+        const x = data.getFloat32(offset, true);
+        offset += 4;
+        const y = data.getFloat32(offset, true);
+        offset += 4;
+        const z = data.getFloat32(offset, true);
+        offset += 4;
+        const c0 = data.getFloat32(offset, true);
+        offset += 4;
+        const c1 = data.getFloat32(offset, true);
+        offset += 4;
+        const c2 = data.getFloat32(offset, true);
+        offset += 4;
+        const c3 = data.getFloat32(offset, true);
+        offset += 4;
+        blocks.push({ pos: [x, y, z], color: [c0, c1, c2, c3] });
+      }
+      requestAnimationFrame(drawScene);
+    }
+
+    loadBlocks();
 
     return () => {
       document.removeEventListener('keydown', onKeyDown);
