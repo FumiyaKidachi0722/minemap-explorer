@@ -25,7 +25,9 @@ npm run dev
 - Next.js 15 + React 19 を活かしたパフォーマンス最適化
 - ハザードマップに適した簡潔なビジュアル表現
 - Vercel 無料プランでの運用制限の整理
-- `/viewer` ページで簡易ビューアを表示
+- `/viewer-sample` ページで簡易ビューアを表示
+- `/viewer-sample` ページではサンプルワールドをWASD操作で歩き回れます
+- `/world` ページではサンプルのマイクラワールドを表示します
 
 調査完了後、開発フローとサンプル実装をご提案します。
 
@@ -144,7 +146,7 @@ Next.js 15のApp Router環境とReact 19世代に合わせ、本アプリの実�
 
 1. **Minecraft サーバーに BlueMap プラグインを導入**します。ワールドデータを読み込み、`bluemap` ディレクトリに 3D タイルデータを出力します。
 2. 生成された `bluemap/web` ディレクトリをこのプロジェクトの `public/bluemap` に配置します。
-3. `/viewer` ページから BlueMap データを読み込んで表示するコンポーネントを実装します。React Three Fiber などの 3D ライブラリで PRBM ファイルを解析し、`BufferGeometry` に変換すると描画できます。
+3. `/world` ページから BlueMap データを読み込んで表示するコンポーネントを実装します。React Three Fiber などの 3D ライブラリで PRBM ファイルを解析し、`BufferGeometry` に変換すると描画できます。
 4. サーバー側で定期的に BlueMap の再レンダリングを行い、`public/bluemap` を再デプロイすると、ブラウザ側でも最新のワールドを確認できます。
 
 以上は一例で、PrismarineJS を使い `.mca` ファイルから直接読み取る方法なども検討できます。

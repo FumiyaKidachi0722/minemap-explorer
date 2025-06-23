@@ -2,7 +2,6 @@
 
 import { useRef, useEffect } from 'react';
 
-// Minimal 4x4 matrix utilities for WebGL
 const mat4 = {
   create() {
     return new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
@@ -16,24 +15,10 @@ const mat4 = {
   ) {
     const f = 1.0 / Math.tan(fovy / 2);
     out[0] = f / aspect;
-    out[1] = 0;
-    out[2] = 0;
-    out[3] = 0;
-
-    out[4] = 0;
     out[5] = f;
-    out[6] = 0;
-    out[7] = 0;
-
-    out[8] = 0;
-    out[9] = 0;
     out[10] = (far + near) / (near - far);
     out[11] = -1;
-
-    out[12] = 0;
-    out[13] = 0;
     out[14] = (2 * far * near) / (near - far);
-    out[15] = 0;
     return out;
   },
   multiply(out: Float32Array, a: Float32Array, b: Float32Array) {
@@ -199,7 +184,7 @@ const mat4 = {
   },
 };
 
-export default function ViewerCanvas() {
+export default function WorldViewerCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -207,7 +192,7 @@ export default function ViewerCanvas() {
     const gl = canvas.getContext('webgl') as WebGLRenderingContext;
     if (!gl) return;
 
-    // Shader setup
+    // shaders
     const vs = gl.createShader(gl.VERTEX_SHADER)!;
     gl.shaderSource(
       vs,
@@ -244,24 +229,15 @@ export default function ViewerCanvas() {
     const colorLoc = gl.getUniformLocation(program, 'u_color')!;
 
     const cubeVerts = new Float32Array([
-      // front
       -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5,
-      0.5, -0.5, 0.5, 0.5,
-      // back
-      -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5,
-      0.5, -0.5, 0.5, -0.5, -0.5,
-      // top
-      -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5,
-      0.5, 0.5, 0.5, -0.5,
-      // bottom
+      0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5,
+      -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
+      0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5,
       -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5,
-      -0.5, 0.5, -0.5, -0.5, 0.5,
-      // right
-      0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5,
-      0.5, 0.5, -0.5, 0.5,
-      // left
-      -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -0.5,
-      0.5, 0.5, -0.5, 0.5, -0.5,
+      -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5,
+      0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, -0.5, -0.5,
+      -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5,
+      0.5, -0.5,
     ]);
 
     const buffer = gl.createBuffer()!;
@@ -277,12 +253,10 @@ export default function ViewerCanvas() {
     const proj = mat4.create();
     mat4.perspective(proj, Math.PI / 3, aspect, 0.1, 100);
 
-    const cubes: [number, number, number][] = [];
-    for (let x = -5; x <= 5; x++) {
-      for (let z = -5; z <= 5; z++) {
-        cubes.push([x, 0, z]);
-      }
-    }
+    let blocks: {
+      pos: [number, number, number];
+      color: [number, number, number, number];
+    }[] = [];
 
     const player = { x: 0, y: 1.8, z: 5, yaw: 0, pitch: 0 };
     const keys: Record<string, boolean> = {};
@@ -319,7 +293,6 @@ export default function ViewerCanvas() {
       const back = keys['KeyS'] || keys['ArrowDown'];
       const left = keys['KeyA'] || keys['ArrowLeft'];
       const right = keys['KeyD'] || keys['ArrowRight'];
-
       const sin = Math.sin(player.yaw);
       const cos = Math.cos(player.yaw);
       if (forward) {
@@ -351,9 +324,9 @@ export default function ViewerCanvas() {
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.enable(gl.DEPTH_TEST);
 
-      for (const cube of cubes) {
+      for (const { pos, color } of blocks) {
         const m = mat4.create();
-        mat4.translate(m, m, cube);
+        mat4.translate(m, m, pos);
         const v = mat4.create();
         mat4.rotateX(v, v, player.pitch);
         mat4.rotateY(v, v, player.yaw);
@@ -363,12 +336,28 @@ export default function ViewerCanvas() {
         const mvp = mat4.create();
         mat4.multiply(mvp, proj, mv);
         gl.uniformMatrix4fv(matLoc, false, mvp);
-        gl.uniform4f(colorLoc, 0.3, 0.7, 0.4, 1);
+        gl.uniform4fv(colorLoc, color);
         gl.drawArrays(gl.TRIANGLES, 0, 36);
       }
       requestAnimationFrame(drawScene);
     }
-    requestAnimationFrame(drawScene);
+
+    type Block = {
+      x: number;
+      y: number;
+      z: number;
+      color: [number, number, number, number];
+    };
+
+    fetch('/world.json')
+      .then((res) => res.json())
+      .then((data: { blocks: Block[] }) => {
+        blocks = data.blocks.map((b) => ({
+          pos: [b.x, b.y, b.z],
+          color: b.color,
+        }));
+        requestAnimationFrame(drawScene);
+      });
 
     return () => {
       document.removeEventListener('keydown', onKeyDown);
